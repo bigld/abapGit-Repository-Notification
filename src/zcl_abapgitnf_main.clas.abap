@@ -30,13 +30,14 @@ CLASS zcl_abapgitnf_main IMPLEMENTATION.
 
   METHOD write_repo_change_stats.
 
-    DATA: ls_diff         TYPE ty_diff.
-    DATA: lv_has_diff     TYPE abap_bool.
-    DATA: lt_repos        TYPE zif_abapgit_persistence=>tt_repo.
-    DATA: lr_exception    TYPE REF TO zcx_abapgit_exception.
-    DATA: lt_statuss      TYPE zif_abapgit_definitions=>ty_results_tt.
-    DATA: lr_repo         TYPE REF TO zcl_abapgit_repo.
-    DATA: lv_repo_heading TYPE string.
+    DATA: ls_diff         TYPE ty_diff,
+          lv_has_diff     TYPE abap_bool,
+          lt_repos        TYPE zif_abapgit_persistence=>tt_repo,
+          lr_exception    TYPE REF TO zcx_abapgit_exception,
+          lt_statuss      TYPE zif_abapgit_definitions=>ty_results_tt,
+          lr_repo         TYPE REF TO zcl_abapgit_repo,
+          lv_repo_heading TYPE string,
+          lr_repos        TYPE REF TO zif_abapgit_persist_repo.
 
     FIELD-SYMBOLS: <lv_state_counter> TYPE i.
     FIELD-SYMBOLS: <ls_repo>          TYPE zif_abapgit_persistence=>ty_repo.
@@ -45,10 +46,11 @@ CLASS zcl_abapgitnf_main IMPLEMENTATION.
 *    DATA(repos) = zcl_abapgit_repo_srv=>get_instance( )->list( ).
 *    LOOP AT repos ASSIGNING FIELD-SYMBOL(<repo>).
 
-    lt_repos = zcl_abapgit_persist_factory=>get_repo( )->list( ).
+    lr_repos = zcl_abapgit_persist_factory=>get_repo( ).
+    lt_repos = lr_repos->list( ).
 
     DELETE lt_repos WHERE offline = abap_true.
-    DELETE lt_repos WHERE local_settings-display_name = 'CI'.
+*    DELETE lt_repos WHERE local_settings-display_name = 'CI'.
 
     LOOP AT lt_repos ASSIGNING <ls_repo>.
 
@@ -70,11 +72,13 @@ CLASS zcl_abapgitnf_main IMPLEMENTATION.
 
               TRANSLATE <ls_status>-lstate USING ' _'.
               TRANSLATE <ls_status>-rstate USING ' _'.
-              ASSIGN COMPONENT <ls_status>-lstate && <ls_status>-rstate OF STRUCTURE ls_diff TO <lv_state_counter>. "dump if not yet defined!
+              ASSIGN COMPONENT <ls_status>-lstate && <ls_status>-rstate OF STRUCTURE ls_diff TO <lv_state_counter>.
+              "dump if not yet defined!
               <lv_state_counter> = <lv_state_counter> + 1.
 
             ENDIF.
-*            WRITE: / <ls_status>-filename, <ls_status>-obj_name, <ls_status>-obj_type, <ls_status>-lstate, <ls_status>-rstate, <ls_status>-match.
+*            WRITE: / <ls_status>-filename, <ls_status>-obj_name, <ls_status>-obj_type,
+*                     <ls_status>-lstate, <ls_status>-rstate, <ls_status>-match.
 
           ENDLOOP.
 
@@ -83,9 +87,9 @@ CLASS zcl_abapgitnf_main IMPLEMENTATION.
 
             ULINE.
             IF lv_has_diff = abap_true.
-            lv_repo_heading = lr_repo->get_name( ) && ` `
-                              && lr_repo->get_package( ) && ` `
-                              && <ls_repo>-branch_name.
+              lv_repo_heading = lr_repo->get_name( ) && ` `
+                                && lr_repo->get_package( ) && ` `
+                                && <ls_repo>-branch_name.
               me->write_warning( lv_repo_heading  ).
             ELSE.
               me->write_success( lv_repo_heading ).

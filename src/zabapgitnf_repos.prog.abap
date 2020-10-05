@@ -8,16 +8,18 @@
 REPORT zabapgitnf_repos.
 
 SELECTION-SCREEN: BEGIN OF BLOCK bl1 WITH FRAME.
-PARAMETERS: pwdiff AS CHECKBOX.
+PARAMETERS: p_wdiff AS CHECKBOX.
 SELECTION-SCREEN: END OF BLOCK bl1.
+
+DATA: gr_repo_notifier TYPE REF TO zcl_abapgitnf_main.
 
 START-OF-SELECTION.
 
 
-  DATA(repos) = NEW zcl_abapgitnf_main( ).
+  gr_repo_notifier = NEW zcl_abapgitnf_main( ).
 
   TRY.
-      repos->write_repo_change_stats( pwdiff ).
+      gr_repo_notifier->write_repo_change_stats( p_wdiff ).
     CATCH zcx_abapgit_exception.
       FORMAT COLOR COL_NEGATIVE ON.
       WRITE: 'Unable to read repos'.
