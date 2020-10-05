@@ -14,7 +14,7 @@
   ],
   "syntax": {
     "version": "v702",
-    "errorNamespace": "^(Z|Y|LT?CL_|TY_|LIF_|.*ABAPGIT)",
+    "errorNamespace": "^(Z|Y|LT?CL_|TY_|LIF_|.*ABAPGITNF)",
     "globalConstants": [
       "abap_func_exporting",
       "abap_func_tables",
@@ -138,7 +138,7 @@
     "check_text_elements": true,
     "types_naming": false,
     "7bit_ascii": {
-      "exclude": ["zcl_abapgit_utils.clas.testclasses.abap"]
+      "exclude": [""]
     },
     "abapdoc": false,
     "check_ddic": true,
@@ -234,7 +234,7 @@
     },
     "line_length": {
       "length": 120,
-      "exclude": ["zcl_abapgit_object_pdts.clas.testclasses.abap"]
+      "exclude": [""]
     },
     "line_only_punc": {
       "ignoreExceptions": true
@@ -275,10 +275,10 @@
     },
     "no_public_attributes": false,
     "object_naming": {
-      "clas": "^ZC(L|X)\\_ABAPGIT\\_",
-      "intf": "^ZIF\\_ABAPGIT\\_",
-      "prog": "^ZABAPGIT",
-      "fugr": "^ZABAPGIT",
+      "clas": "^ZC(L|X)\\_ABAPGITNF\\_",
+      "intf": "^ZIF\\_ABAPGITNF\\_",
+      "prog": "^ZABAPGITNF",
+      "fugr": "^ZABAPGITNF",
       "tabl": "^Z",
       "ttyp": "^Z",
       "dtel": "^Z",
