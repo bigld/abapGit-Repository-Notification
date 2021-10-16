@@ -8,7 +8,7 @@
 REPORT zabapgitnf_repos.
 
 SELECTION-SCREEN: BEGIN OF BLOCK bl1 WITH FRAME.
-PARAMETERS: p_wdiff AS CHECKBOX.
+  PARAMETERS: p_wdiff AS CHECKBOX.
 SELECTION-SCREEN: END OF BLOCK bl1.
 
 DATA: gr_repo_notifier TYPE REF TO zcl_abapgitnf_main.

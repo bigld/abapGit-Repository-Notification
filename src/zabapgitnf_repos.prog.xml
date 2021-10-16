@@ -12,12 +12,12 @@
    <TPOOL>
     <item>
      <ID>R</ID>
-     <ENTRY>Program ZABAPGITNF_REPOS</ENTRY>
-     <LENGTH>24</LENGTH>
+     <ENTRY>Check ABAPGIT Repos for Diffs</ENTRY>
+     <LENGTH>29</LENGTH>
     </item>
     <item>
      <ID>S</ID>
-     <KEY>PWDIFF</KEY>
+     <KEY>P_WDIFF</KEY>
      <ENTRY>show Repos with Diffs only</ENTRY>
      <LENGTH>34</LENGTH>
     </item>
