@@ -3,7 +3,12 @@ CLASS zcl_abapgitnf_main DEFINITION
   CREATE PUBLIC .
 
   PUBLIC SECTION.
-
+    CONSTANTS: BEGIN OF cc_diff_status,
+                 unknown TYPE char1 VALUE '0',
+                 error   TYPE char1 VALUE '1',
+                 diff    TYPE char1 VALUE '2',
+                 ok      TYPE char1 VALUE '3',
+               END OF cc_diff_status.
     METHODS write_repo_change_stats IMPORTING iv_with_diff_only TYPE abap_bool
                                     RAISING   zcx_abapgit_exception.
 
@@ -20,11 +25,13 @@ CLASS zcl_abapgitnf_main DEFINITION
              _d    TYPE i,
            END OF ty_diff.
     TYPES: BEGIN OF ty_repo_info,
+             status_icon TYPE icon_d,
              repo_name   TYPE string,
              package     TYPE devclass,
              branch_name TYPE string,
              url         TYPE string,
              status      TYPE ty_diff,
+             message     TYPE string,
            END OF ty_repo_info,
            ty_repo_infos TYPE STANDARD TABLE OF ty_repo_info.
 
@@ -39,6 +46,7 @@ CLASS zcl_abapgitnf_main DEFINITION
     METHODS add_alv_info IMPORTING i_header TYPE REF TO cl_salv_form_layout_grid
                                    i_label  TYPE string
                                    i_text   TYPE string.
+
 ENDCLASS.
 
 
@@ -48,7 +56,7 @@ CLASS zcl_abapgitnf_main IMPLEMENTATION.
   METHOD write_repo_change_stats.
 
     DATA: ls_diff         TYPE ty_diff,
-          lv_has_diff     TYPE abap_bool,
+          diff_status     TYPE char1,
           lt_repos        TYPE zif_abapgit_persistence=>ty_repos,
           lr_exception    TYPE REF TO zcx_abapgit_exception,
           lt_statuss      TYPE zif_abapgit_definitions=>ty_results_tt,
@@ -68,21 +76,23 @@ CLASS zcl_abapgitnf_main IMPLEMENTATION.
 
     LOOP AT lt_repos ASSIGNING <ls_repo>.
 
+      CLEAR ls_diff.
+      diff_status = cc_diff_status-ok.
+
       TRY.
 
           lr_repo = zcl_abapgit_repo_srv=>get_instance( )->get( <ls_repo>-key ).
 
           lt_statuss = lr_repo->status( ).
 
-          CLEAR ls_diff.
-          CLEAR lv_has_diff.
+
 
           LOOP AT lt_statuss ASSIGNING <ls_status>.
 
             IF <ls_status>-match = abap_true.
               ls_diff-match = ls_diff-match + 1.
             ELSE.
-              lv_has_diff = abap_true.
+              diff_status = cc_diff_status-diff.
 
               TRANSLATE <ls_status>-lstate USING ' _'.
               TRANSLATE <ls_status>-rstate USING ' _'.
@@ -94,23 +104,30 @@ CLASS zcl_abapgitnf_main IMPLEMENTATION.
 
           ENDLOOP.
 
-          IF   lv_has_diff = abap_true
+          IF   diff_status = cc_diff_status-diff
             OR iv_with_diff_only = abap_false.
 
             APPEND VALUE #( repo_name   = lr_repo->get_name( )
                             package     = lr_repo->get_package( )
                             branch_name = zcl_abapgit_git_branch_list=>get_display_name( <ls_repo>-branch_name )
                             url         = <ls_repo>-url
-                            status      = ls_diff ) TO me->repos.
+                            status      = ls_diff
+                            status_icon = diff_status ) TO me->repos.
 
           ENDIF.
 
         CATCH zcx_abapgit_exception INTO lr_exception.
-*          write_error( lr_exception->get_text( ) ).
+          diff_status = cc_diff_status-error.
+          APPEND VALUE #( repo_name   = lr_repo->get_name( )
+                          package     = lr_repo->get_package( )
+                          branch_name = zcl_abapgit_git_branch_list=>get_display_name( <ls_repo>-branch_name )
+                          url         = <ls_repo>-url
+                          status      = ls_diff
+                          status_icon = diff_status
+                          message     = lr_exception->get_text( ) ) TO me->repos.
 
       ENDTRY.
 
-      EXIT.
     ENDLOOP.
 
     me->display( me->repos ).
@@ -128,9 +145,9 @@ CLASS zcl_abapgitnf_main IMPLEMENTATION.
 
 
         TRY.
-            salv_table->get_columns( )->get_column( columnname = 'STATUS' )->set_alignment(  value = if_salv_c_alignment=>centered ).
-            salv_table->get_columns( )->get_column( columnname = 'STATUS' )->set_output_length( value = 10 ).
-            salv_table->get_columns( )->set_exception_column( value = 'STATUS' group = '2' ).
+            salv_table->get_columns( )->get_column( columnname = 'STATUS_ICON' )->set_alignment(  value = if_salv_c_alignment=>centered ).
+            salv_table->get_columns( )->get_column( columnname = 'STATUS_ICON' )->set_output_length( value = 10 ).
+            salv_table->get_columns( )->set_exception_column( value = 'STATUS_ICON' group = '2').
           CATCH cx_salv_not_found cx_salv_data_error .
         ENDTRY.
 
@@ -153,11 +170,13 @@ CLASS zcl_abapgitnf_main IMPLEMENTATION.
 
   METHOD set_alv_column_texts.
 
+    set_alv_column_text( i_columns = i_columns i_column_name = 'STATUS_ICON'  i_column_text = 'Status' ).
     set_alv_column_text( i_columns = i_columns i_column_name = 'REPO_NAME'    i_column_text = 'Repository' ).
     set_alv_column_text( i_columns = i_columns i_column_name = 'PACKAGE'      i_column_text = 'Package' ).
     set_alv_column_text( i_columns = i_columns i_column_name = 'BRANCH_NAME'  i_column_text = 'Branch' ).
     set_alv_column_text( i_columns = i_columns i_column_name = 'URL'          i_column_text = 'Repo URL' ).
     CAST cl_salv_column_list( i_columns->get_column( columnname = 'URL' ) )->set_cell_type( if_salv_c_cell_type=>link ).
+
 
     set_alv_column_text( i_columns = i_columns i_column_name = 'STATUS-MATCH' i_column_text = 'equal' ).
     set_alv_column_text( i_columns = i_columns i_column_name = 'STATUS-A_'    i_column_text = 'local added' ).

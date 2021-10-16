@@ -34,7 +34,6 @@ FORM password_popup
         USING u_repo_url TYPE string
         CHANGING c_user  TYPE string
                  c_pass  TYPE string.
-  FORMAT COLOR COL_NEGATIVE ON.
-  WRITE: / 'Private repos not yet supported: ', u_repo_url.
-  FORMAT COLOR OFF.
+  CLEAR c_user.
+  CLEAR c_pass.
 ENDFORM.
