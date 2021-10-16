@@ -55,50 +55,42 @@ CLASS zcl_abapgitnf_main IMPLEMENTATION.
 
   METHOD write_repo_change_stats.
 
-    DATA: ls_diff         TYPE ty_diff,
-          diff_status     TYPE char1,
-          lt_repos        TYPE zif_abapgit_persistence=>ty_repos,
-          lr_exception    TYPE REF TO zcx_abapgit_exception,
-          lt_statuss      TYPE zif_abapgit_definitions=>ty_results_tt,
-          lr_repo         TYPE REF TO zcl_abapgit_repo,
-          lv_repo_heading TYPE string,
-          lr_repos        TYPE REF TO zif_abapgit_persist_repo.
+    DATA: repos_api   TYPE REF TO zif_abapgit_persist_repo.
+    DATA: repo_api        TYPE REF TO zcl_abapgit_repo.
+    DATA: diff_count  TYPE ty_diff.
+    DATA: diff_status TYPE char1.
+    DATA: repos       TYPE zif_abapgit_persistence=>ty_repos.
 
-    FIELD-SYMBOLS: <lv_state_counter> TYPE i.
-    FIELD-SYMBOLS: <ls_repo>          TYPE zif_abapgit_persistence=>ty_repo.
-    FIELD-SYMBOLS: <ls_status>        LIKE LINE OF lt_statuss.
+    FIELD-SYMBOLS: <state_counter> TYPE i.
 
+    repos_api = zcl_abapgit_persist_factory=>get_repo( ).
+    repos = repos_api->list( ).
 
-    lr_repos = zcl_abapgit_persist_factory=>get_repo( ).
-    lt_repos = lr_repos->list( ).
+    DELETE repos WHERE offline = abap_true.
 
-    DELETE lt_repos WHERE offline = abap_true.
+    LOOP AT repos ASSIGNING FIELD-SYMBOL(<repo>).
 
-    LOOP AT lt_repos ASSIGNING <ls_repo>.
-
-      CLEAR ls_diff.
+      CLEAR diff_count.
       diff_status = cc_diff_status-ok.
 
       TRY.
 
-          lr_repo = zcl_abapgit_repo_srv=>get_instance( )->get( <ls_repo>-key ).
+          repo_api = zcl_abapgit_repo_srv=>get_instance( )->get( <repo>-key ).
 
-          lt_statuss = lr_repo->status( ).
+          DATA(statuss) = repo_api->status( ).
 
+          LOOP AT statuss ASSIGNING FIELD-SYMBOL(<status>).
 
-
-          LOOP AT lt_statuss ASSIGNING <ls_status>.
-
-            IF <ls_status>-match = abap_true.
-              ls_diff-match = ls_diff-match + 1.
+            IF <status>-match = abap_true.
+              diff_count-match = diff_count-match + 1.
             ELSE.
               diff_status = cc_diff_status-diff.
 
-              TRANSLATE <ls_status>-lstate USING ' _'.
-              TRANSLATE <ls_status>-rstate USING ' _'.
-              ASSIGN COMPONENT <ls_status>-lstate && <ls_status>-rstate OF STRUCTURE ls_diff TO <lv_state_counter>.
+              TRANSLATE <status>-lstate USING ' _'.
+              TRANSLATE <status>-rstate USING ' _'.
+              ASSIGN COMPONENT <status>-lstate && <status>-rstate OF STRUCTURE diff_count TO <state_counter>.
               "dump if not yet defined!
-              <lv_state_counter> = <lv_state_counter> + 1.
+              <state_counter> = <state_counter> + 1.
 
             ENDIF.
 
@@ -107,24 +99,24 @@ CLASS zcl_abapgitnf_main IMPLEMENTATION.
           IF   diff_status = cc_diff_status-diff
             OR iv_with_diff_only = abap_false.
 
-            APPEND VALUE #( repo_name   = lr_repo->get_name( )
-                            package     = lr_repo->get_package( )
-                            branch_name = zcl_abapgit_git_branch_list=>get_display_name( <ls_repo>-branch_name )
-                            url         = <ls_repo>-url
-                            status      = ls_diff
+            APPEND VALUE #( repo_name   = repo_api->get_name( )
+                            package     = repo_api->get_package( )
+                            branch_name = zcl_abapgit_git_branch_list=>get_display_name( <repo>-branch_name )
+                            url         = <repo>-url
+                            status      = diff_count
                             status_icon = diff_status ) TO me->repos.
 
           ENDIF.
 
-        CATCH zcx_abapgit_exception INTO lr_exception.
+        CATCH zcx_abapgit_exception INTO DATA(exception).
           diff_status = cc_diff_status-error.
-          APPEND VALUE #( repo_name   = lr_repo->get_name( )
-                          package     = lr_repo->get_package( )
-                          branch_name = zcl_abapgit_git_branch_list=>get_display_name( <ls_repo>-branch_name )
-                          url         = <ls_repo>-url
-                          status      = ls_diff
+          APPEND VALUE #( repo_name   = repo_api->get_name( )
+                          package     = repo_api->get_package( )
+                          branch_name = zcl_abapgit_git_branch_list=>get_display_name( <repo>-branch_name )
+                          url         = <repo>-url
+                          status      = diff_count
                           status_icon = diff_status
-                          message     = lr_exception->get_text( ) ) TO me->repos.
+                          message     = exception->get_text( ) ) TO me->repos.
 
       ENDTRY.
 
