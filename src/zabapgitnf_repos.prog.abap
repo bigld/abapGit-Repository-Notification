@@ -16,7 +16,7 @@ DATA: gr_repo_notifier TYPE REF TO zcl_abapgitnf_main.
 START-OF-SELECTION.
 
 
-  gr_repo_notifier = NEW zcl_abapgitnf_main( ).
+gr_repo_notifier = NEW zcl_abapgitnf_main( ).
 
   TRY.
       gr_repo_notifier->write_repo_change_stats( p_wdiff ).

@@ -9,7 +9,7 @@ CLASS zcl_abapgitnf_main DEFINITION
                  diff    TYPE char1 VALUE '2',
                  ok      TYPE char1 VALUE '3',
                END OF cc_diff_status.
-    METHODS write_repo_change_stats IMPORTING iv_with_diff_only TYPE abap_bool
+    METHODS write_repo_change_stats IMPORTING i_with_diff_only TYPE abap_bool
                                     RAISING   zcx_abapgit_exception.
 
   PROTECTED SECTION.
@@ -35,8 +35,8 @@ CLASS zcl_abapgitnf_main DEFINITION
            END OF ty_repo_info,
            ty_repo_infos TYPE STANDARD TABLE OF ty_repo_info.
 
-    DATA: repos      TYPE ty_repo_infos.
-    DATA: header_row TYPE i.
+    DATA: m_repos      TYPE ty_repo_infos.
+    DATA: m_header_row TYPE i.
 
     METHODS display IMPORTING i_repos TYPE ty_repo_infos.
     METHODS set_alv_column_texts IMPORTING i_columns TYPE REF TO cl_salv_columns_table.
@@ -56,7 +56,7 @@ CLASS zcl_abapgitnf_main IMPLEMENTATION.
   METHOD write_repo_change_stats.
 
     DATA: repos_api   TYPE REF TO zif_abapgit_persist_repo.
-    DATA: repo_api        TYPE REF TO zcl_abapgit_repo.
+    DATA: repo_api    TYPE REF TO zcl_abapgit_repo.
     DATA: diff_count  TYPE ty_diff.
     DATA: diff_status TYPE char1.
     DATA: repos       TYPE zif_abapgit_persistence=>ty_repos.
@@ -75,7 +75,7 @@ CLASS zcl_abapgitnf_main IMPLEMENTATION.
 
       TRY.
 
-          repo_api = zcl_abapgit_repo_srv=>get_instance( )->get( <repo>-key ).
+          repo_api = CAST #( zcl_abapgit_repo_srv=>get_instance( )->get( <repo>-key ) ).
 
           DATA(statuss) = repo_api->status( ).
 
@@ -97,14 +97,14 @@ CLASS zcl_abapgitnf_main IMPLEMENTATION.
           ENDLOOP.
 
           IF   diff_status = cc_diff_status-diff
-            OR iv_with_diff_only = abap_false.
+            OR i_with_diff_only = abap_false.
 
             APPEND VALUE #( repo_name   = repo_api->get_name( )
                             package     = repo_api->get_package( )
                             branch_name = zcl_abapgit_git_branch_list=>get_display_name( <repo>-branch_name )
                             url         = <repo>-url
                             status      = diff_count
-                            status_icon = diff_status ) TO me->repos.
+                            status_icon = diff_status ) TO me->m_repos.
 
           ENDIF.
 
@@ -116,13 +116,13 @@ CLASS zcl_abapgitnf_main IMPLEMENTATION.
                           url         = <repo>-url
                           status      = diff_count
                           status_icon = diff_status
-                          message     = exception->get_text( ) ) TO me->repos.
+                          message     = exception->get_text( ) ) TO me->m_repos.
 
       ENDTRY.
 
     ENDLOOP.
 
-    me->display( me->repos ).
+    me->display( me->m_repos ).
 
   ENDMETHOD.
 
@@ -135,16 +135,15 @@ CLASS zcl_abapgitnf_main IMPLEMENTATION.
                                 CHANGING  t_table      = repos ).
         salv_table->get_functions( )->set_all( if_salv_c_bool_sap=>true ).
 
-
         TRY.
             salv_table->get_columns( )->get_column( columnname = 'STATUS_ICON' )->set_alignment(  value = if_salv_c_alignment=>centered ).
             salv_table->get_columns( )->get_column( columnname = 'STATUS_ICON' )->set_output_length( value = 10 ).
-            salv_table->get_columns( )->set_exception_column( value = 'STATUS_ICON' group = '2').
-          CATCH cx_salv_not_found cx_salv_data_error .
+            salv_table->get_columns( )->set_exception_column( value = 'STATUS_ICON' group = '2' ).
+          CATCH cx_salv_not_found cx_salv_data_error.
         ENDTRY.
 
 
-        me->set_alv_column_texts( salv_table->get_columns( ) ) .
+        me->set_alv_column_texts( salv_table->get_columns( ) ).
         salv_table->get_columns( )->set_optimize( abap_true ).
 
 
@@ -196,12 +195,12 @@ CLASS zcl_abapgitnf_main IMPLEMENTATION.
 
   METHOD add_alv_info.
 
-    header_row = header_row + 1.
+    m_header_row = m_header_row + 1.
 
-    i_header->create_label( row    = header_row
+    i_header->create_label( row    = m_header_row
                             column = 1
                             text   = i_label ).
-    i_header->create_text( row    = header_row
+    i_header->create_text( row    = m_header_row
                            column = 2
                            text   = i_text ).
 
