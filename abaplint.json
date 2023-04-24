@@ -18,7 +18,7 @@
     }
   ],
   "syntax": {
-    "version": "v702",
+    "version": "v740",
     "errorNamespace": "^(Z|Y|LT?CL_|TY_|LIF_|.*ABAPGITNF)",
     "globalConstants": [
       "abap_func_exporting",
@@ -101,7 +101,7 @@
     "prefer_inline": false,
     "reduce_string_templates": true,
     "downport": false,
-    "line_break_multiple_parameters": true,
+    "line_break_multiple_parameters": false,
     "unknown_types": true,
     "forbidden_void_type": {
       "check": ["^stringtab$", "^SYCHAR01$", "^char2$", "^char20$", "^int4$", "^SYREPID$",
@@ -177,10 +177,10 @@
     "class_attribute_names": {
       "ignoreExceptions": true,
       "ignoreInterfaces": false,
-      "statics": "^G._.*$",
+      "statics": "^G_.*$",
       "ignoreLocal": false,
       "constants": "",
-      "instance": "^M._.*$"
+      "instance": "^M_.*$"
     },
     "cloud_types": true,
     "colon_missing_space": true,
@@ -250,9 +250,9 @@
     },
     "local_testclass_location": true,
     "local_variable_names": {
-      "expectedData": "^L._.*$",
-      "expectedConstant": "^LC_.*$",
-      "expectedFS": "^<L._.*>$"
+      "expectedData": "^.*$",
+      "expectedConstant": "^.*$",
+      "expectedFS": "^<.*>$"
     },
     "main_file_contents": true,
     "max_one_statement": true,
@@ -264,10 +264,10 @@
     },
     "method_parameter_names": {
       "ignoreExceptions": true,
-      "importing": "^I._.*$",
-      "returning": "^R._.*$",
-      "changing": "^C._.*$",
-      "exporting": "^E._.*$",
+      "importing": "^I_.*$",
+      "returning": "^R_.*$",
+      "changing": "^C_.*$",
+      "exporting": "^E_.*$",
       "ignoreNames": [
         "P_TASK"
       ]
