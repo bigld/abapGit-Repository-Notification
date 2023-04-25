@@ -461,7 +461,7 @@
       "severity": "Error",
       "ignoreExceptions": true,
       "alignTryCatch": false,
-      "selectionScreenBlockIndentation": false,
+      "selectionScreenBlockIndentation": true,
       "globalClassSkipFirst": false,
       "ignoreGlobalClassDefinition": false,
       "ignoreGlobalInterface": false
@@ -896,7 +896,7 @@
     },
     "unnecessary_chaining": {
       "exclude": [],
-      "severity": "Error"
+      "severity": "Warning"
     },
     "unnecessary_pragma": {
       "exclude": [],
@@ -929,7 +929,7 @@
     },
     "unused_variables": {
       "exclude": [],
-      "severity": "Error",
+      "severity": "Warning",
       "skipNames": []
     },
     "use_bool_expression": {
